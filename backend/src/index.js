@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const communities = require("./routes/communities");
 require('dotenv').config();
 
 const app = express();
@@ -25,6 +26,8 @@ app.use('/api/posts',       require('./routes/posts'));
 app.use('/api/connections', require('./routes/connections'));
 app.use('/api/messages',    require('./routes/messages'));
 app.use('/api/resumes',     require('./routes/resumes'));
+app.use("/api/communities", communities);
+
 
 // 404 fallback
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));

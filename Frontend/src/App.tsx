@@ -13,6 +13,7 @@ import Network  from "./pages/Network.tsx";
 import Messages from "./pages/Messages.tsx";
 import Resumes  from "./pages/Resumes.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import Communities from "./pages/Communities.tsx";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/dashboard/network"  element={<ProtectedRoute><Network /></ProtectedRoute>} />
             <Route path="/dashboard/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
             <Route path="/dashboard/resumes"  element={<ProtectedRoute><Resumes /></ProtectedRoute>} />
+            <Route path="/dashboard/communities" element={<ProtectedRoute><Communities /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

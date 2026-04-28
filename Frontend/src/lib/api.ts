@@ -211,3 +211,43 @@ export interface Message {
   read: boolean;
   created_at: string;
 }
+export const communitiesApi = {
+  list: () =>
+    request<any[]>('/api/communities'),
+
+  get: (id: number) =>
+    request<any>(`/api/communities/${id}`),
+
+  create: (name: string, description: string) =>
+    request<any>('/api/communities', {
+      method: 'POST',
+      body: JSON.stringify({ name, description }),
+    }),
+
+  join: (id: number) =>
+    request<any>(`/api/communities/${id}/join`, { method: 'POST' }),
+
+  leave: (id: number) =>
+    request<any>(`/api/communities/${id}/leave`, { method: 'POST' }),
+
+  toggleChat: (id: number) =>
+    request<any>(`/api/communities/${id}/toggle-chat`, { method: 'PATCH' }),
+
+  delete: (id: number) =>
+    request<any>(`/api/communities/${id}`, { method: 'DELETE' }),
+
+  members: (id: number) =>
+    request<any[]>(`/api/communities/${id}/members`),
+
+  messages: (id: number) =>
+    request<any[]>(`/api/communities/${id}/messages`),
+
+  sendMessage: (id: number, content: string) =>
+    request<any>(`/api/communities/${id}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    }),
+
+  toggleMemberChat: (communityId: number, userId: string) =>
+    request<any>(`/api/communities/${communityId}/members/${userId}/toggle-chat`, { method: 'PATCH' }),
+};
