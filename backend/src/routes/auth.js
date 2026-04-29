@@ -20,30 +20,7 @@ const protect  = require('../middleware/auth');
 const email    = require('../services/email');
 const { generateOtp } = require('../services/credentials');
 
-// ─── Verification document upload (signup) ──────────────────────────────────
-const verificationStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '../../uploads/verifications');
-    fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `${Date.now()}-${uuidv4()}${ext}`);
-  },
-});
-const ALLOWED_VERIFICATION_TYPES = new Set([
-  'application/pdf',
-  'image/png', 'image/jpeg', 'image/jpg', 'image/webp',
-]);
-const uploadVerification = multer({
-  storage: verificationStorage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
-  fileFilter: (req, file, cb) => {
-    if (ALLOWED_VERIFICATION_TYPES.has(file.mimetype)) cb(null, true);
-    else cb(new Error('Only PDF, PNG, JPG or WEBP files are allowed'));
-  },
-});
+const { uploadDocument } = require('../config/cloudinary');
 
 function buildToken(user) {
   return jwt.sign(
@@ -76,7 +53,7 @@ function publicUser(u) {
 // and once approved an account is created and credentials are emailed to the
 // user. NO JWT is issued at this point — the user cannot log in yet.
 router.post('/register', (req, res) => {
-  uploadVerification.single('verification_doc')(req, res, async (uploadErr) => {
+  uploadDocument.single('verification_doc')(req, res, async (uploadErr) => {
     if (uploadErr) return res.status(400).json({ error: uploadErr.message });
 
     const {
@@ -102,7 +79,9 @@ router.post('/register', (req, res) => {
 
       // Pending application already exists? Replace document but keep status = pending.
       const pending = await db.query('SELECT id, status FROM pending_registrations WHERE email = $1', [emailNormalised]);
-      const verificationUrl = `${process.env.BASE_URL || 'http://localhost:3001'}/uploads/verifications/${req.file.filename}`;
+      
+      // Cloudinary puts the public URL in req.file.path
+      const verificationUrl = req.file.path;
 
       if (pending.rows.length) {
         const existing = pending.rows[0];

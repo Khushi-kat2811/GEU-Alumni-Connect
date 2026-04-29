@@ -12,26 +12,7 @@ const { v4: uuidv4 } = require('uuid');
 const db      = require('../db');
 const protect = require('../middleware/auth');
 
-// Post-image upload storage
-const imageStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '../../uploads/post-images');
-    fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${uuidv4()}${ext}`);
-  },
-});
-const uploadImage = multer({
-  storage: imageStorage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) cb(null, true);
-    else cb(new Error('Only image files are allowed'));
-  },
-});
+const { uploadImage } = require('../config/cloudinary');
 
 // GET /api/posts — all posts with profile, likes, comment count, & user-liked flag
 router.get('/', protect, async (req, res) => {
@@ -86,7 +67,7 @@ router.post('/', protect, (req, res) => {
     const { content } = req.body;
     let image_url = null;
     if (req.file) {
-      image_url = `${process.env.BASE_URL || 'http://localhost:3001'}/uploads/post-images/${req.file.filename}`;
+      image_url = req.file.path;
     }
     if (!content?.trim() && !image_url) {
       return res.status(400).json({ error: 'Post must have content or an image' });

@@ -48,26 +48,7 @@ async function getMembership(communityId, userId) {
 }
 function isStaff(role) { return role === 'admin' || role === 'moderator'; }
 
-// Image upload for community posts
-const postImgStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '../../uploads/community-posts');
-    fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${uuidv4()}${ext}`);
-  },
-});
-const uploadPostImg = multer({
-  storage: postImgStorage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) cb(null, true);
-    else cb(new Error('Only image files are allowed'));
-  },
-});
+const { uploadImage } = require('../config/cloudinary');
 
 // ─── Communities CRUD + membership ──────────────────────────────────────────
 
@@ -311,7 +292,7 @@ router.get('/:id/posts', auth, async (req, res) => {
 });
 
 router.post('/:id/posts', auth, (req, res) => {
-  uploadPostImg.single('image')(req, res, async (uploadErr) => {
+  uploadImage.single('image')(req, res, async (uploadErr) => {
     if (uploadErr) return res.status(400).json({ error: uploadErr.message });
     try {
       const me = await getMembership(req.params.id, req.user.id);
@@ -323,7 +304,7 @@ router.post('/:id/posts', auth, (req, res) => {
 
       let image_url = null;
       if (req.file) {
-        image_url = `${process.env.BASE_URL || 'http://localhost:3001'}/uploads/community-posts/${req.file.filename}`;
+        image_url = req.file.path;
       }
 
       const { rows } = await pool.query(
